@@ -1,15 +1,23 @@
-const router = require("express").Router();
-const { Post, User } = require("../../models");
+const router = require('express').Router();
+const { Post, User, Comment } = require('../../models');
 
 // get all users
-router.get("/", (req, res) => {
+router.get('/', (req, res) => {
   Post.findAll({
-    attributes: ["id", "post_url", "title", "created_at"],
-    order: [['created_at', 'DESC']], 
+    attributes: ['id', 'post_url', 'title', 'created_at'],
+    order: [['created_at', 'DESC']],
     include: [
       {
+        model: Comment,
+        attributes: ['id', 'comment_text', 'post_id', 'user_id', 'created_at'],
+        include: {
+          model: User,
+          attributes: ['username'],
+        },
+      },
+      {
         model: User,
-        attributes: ["username"],
+        attributes: ['username'],
       },
     ],
   })
@@ -20,22 +28,30 @@ router.get("/", (req, res) => {
     });
 });
 
-router.get("/:id", (req, res) => {
+router.get('/:id', (req, res) => {
   Post.findOne({
     where: {
       id: req.params.id,
     },
-    attributes: ["id", "post_url", "title", "created_at"],
+    attributes: ['id', 'post_url', 'title', 'created_at'],
     include: [
       {
+        model: Comment,
+        attributes: ['id', 'comment_text', 'post_id', 'user_id', 'created_at'],
+        include: {
+          model: User,
+          attributes: ['username'],
+        },
+      },
+      {
         model: User,
-        attributes: ["username"],
+        attributes: ['username'],
       },
     ],
   })
     .then((postData) => {
       if (!postData) {
-        res.status(404).json({ message: "No post found with this id" });
+        res.status(404).json({ message: 'No post found with this id' });
         return;
       }
       res.json(postData);
@@ -46,7 +62,7 @@ router.get("/:id", (req, res) => {
     });
 });
 
-router.post("/", (req, res) => {
+router.post('/', (req, res) => {
   Post.create({
     title: req.body.title,
     post_url: req.body.post_url,
@@ -59,7 +75,7 @@ router.post("/", (req, res) => {
     });
 });
 
-router.put("/:id", (req, res) => {
+router.put('/:id', (req, res) => {
   Post.update(
     {
       title: req.body.title,
@@ -72,7 +88,7 @@ router.put("/:id", (req, res) => {
   )
     .then((updatedPostData) => {
       if (!updatedPostData) {
-        res.status(404).json({ message: "No post found with this id" });
+        res.status(404).json({ message: 'No post found with this id' });
         return;
       }
       res.json(updatedPostData);
@@ -83,7 +99,7 @@ router.put("/:id", (req, res) => {
     });
 });
 
-router.delete("/:id", (req, res) => {
+router.delete('/:id', (req, res) => {
   Post.destroy({
     where: {
       id: req.params.id,
@@ -91,7 +107,7 @@ router.delete("/:id", (req, res) => {
   })
     .then((postData) => {
       if (!postData) {
-        res.status(404).json({ message: "No post found with this id" });
+        res.status(404).json({ message: 'No post found with this id' });
         return;
       }
       res.json(postData);
