@@ -1,10 +1,11 @@
 const router = require('express').Router();
 const { Post, User, Comment } = require('../../models');
+const withAuth = require('../../utils/auth');
 
 // get all users
 router.get('/', (req, res) => {
   Post.findAll({
-    attributes: ['id', 'post_url', 'title', 'created_at'],
+    attributes: ['id', 'title', 'post_body', 'created_at'],
     order: [['created_at', 'DESC']],
     include: [
       {
@@ -21,7 +22,7 @@ router.get('/', (req, res) => {
       },
     ],
   })
-    .then((postData) => res.json(postData))
+    .then((dbPostData) => res.json(dbPostData))
     .catch((err) => {
       console.log(err);
       res.status(500).json(err);
@@ -33,7 +34,7 @@ router.get('/:id', (req, res) => {
     where: {
       id: req.params.id,
     },
-    attributes: ['id', 'post_url', 'title', 'created_at'],
+    attributes: ['id', 'title', 'post_body', 'created_at'],
     include: [
       {
         model: Comment,
@@ -49,12 +50,12 @@ router.get('/:id', (req, res) => {
       },
     ],
   })
-    .then((postData) => {
-      if (!postData) {
+    .then((dbPostData) => {
+      if (!dbPostData) {
         res.status(404).json({ message: 'No post found with this id' });
         return;
       }
-      res.json(postData);
+      res.json(dbPostData);
     })
     .catch((err) => {
       console.log(err);
@@ -62,23 +63,24 @@ router.get('/:id', (req, res) => {
     });
 });
 
-router.post('/', (req, res) => {
+router.post('/', withAuth, (req, res) => {
   Post.create({
     title: req.body.title,
-    post_url: req.body.post_url,
-    user_id: req.body.user_id,
+    post_body: req.body.post_body,
+    user_id: req.session.user_id,
   })
-    .then((newPostData) => res.json(newPostData))
+    .then((dbPostData) => res.json(dbPostData))
     .catch((err) => {
       console.log(err);
       res.status(500).json(err);
     });
 });
 
-router.put('/:id', (req, res) => {
+router.put('/:id', withAuth, (req, res) => {
   Post.update(
     {
       title: req.body.title,
+      post_body: req.body.post_body
     },
     {
       where: {
@@ -86,12 +88,12 @@ router.put('/:id', (req, res) => {
       },
     }
   )
-    .then((updatedPostData) => {
-      if (!updatedPostData) {
+    .then((dbPostData) => {
+      if (!dbPostData) {
         res.status(404).json({ message: 'No post found with this id' });
         return;
       }
-      res.json(updatedPostData);
+      res.json(dbPostData);
     })
     .catch((err) => {
       console.log(err);
@@ -99,18 +101,18 @@ router.put('/:id', (req, res) => {
     });
 });
 
-router.delete('/:id', (req, res) => {
+router.delete('/:id', withAuth, (req, res) => {
   Post.destroy({
     where: {
       id: req.params.id,
     },
   })
-    .then((postData) => {
-      if (!postData) {
+    .then((dbPostData) => {
+      if (!dbPostData) {
         res.status(404).json({ message: 'No post found with this id' });
         return;
       }
-      res.json(postData);
+      res.json(dbPostData);
     })
     .catch((err) => {
       console.log(err);
